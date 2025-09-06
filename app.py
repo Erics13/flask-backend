@@ -84,7 +84,7 @@ def start_rtp():
         def poll_details(handle_id):
             url_details = f"{API_GATEWAY_HOST}/interact/api/city/realtimelink/v1.0/en-us/{RESOURCE_ID}/details?handleId={handle_id}"
             MAX_ATTEMPTS = 5
-            POLL_INTERVAL = 5
+            POLL_INTERVAL = 15
             for _ in range(MAX_ATTEMPTS):
                 try:
                     details_res = requests.get(url_details, headers={"Authorization": f"Bearer {token}"})
