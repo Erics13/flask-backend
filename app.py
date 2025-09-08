@@ -80,11 +80,12 @@ def start_rtp():
 
         rtp_status[int(handle_id)] = {"antenna": antenna, "status": "PENDING", "data": None}
 
+        
         # Polling en background
         def poll_details(handle_id):
             url_details = f"{API_GATEWAY_HOST}/interact/api/city/realtimelink/v1.0/en-us/{RESOURCE_ID}/details?handleId={handle_id}"
-            MAX_ATTEMPTS = 4       # más intentos (ej: 8 * 10s = 80s)
-            POLL_INTERVAL = 10     # segundos entre intentos
+            MAX_ATTEMPTS = 6       # máximo de intentos
+            POLL_INTERVAL = 5     # segundos entre intentos
             last_data = None
 
             for attempt in range(MAX_ATTEMPTS):
@@ -93,10 +94,21 @@ def start_rtp():
                     if details_res.status_code == 200:
                         details_json = details_res.json()
                         if isinstance(details_json, list) and len(details_json) > 0:
-                            print(f"[DEBUG] Intento {attempt+1}: {len(details_json[0].get('properties', []))} propiedades recibidas")
+                            props = details_json[0].get("properties", [])
+                            num_props = len(props)
+                            print(f"[DEBUG] Intento {attempt+1}: {num_props} propiedades recibidas")
                             last_data = details_json
+
+                            # ---- Criterio de corte ----
+                            if num_props > 20:
+                                print("[DEBUG] Más de 20 propiedades recibidas → stop polling")
+                                break
+                            if num_props == 1:
+                                print("[DEBUG] Solo 1 propiedad (inaccesible) → stop polling")
+                                break
                 except Exception as e:
                     print(f"[DEBUG] Error en intento {attempt+1}: {e}")
+
                 time.sleep(POLL_INTERVAL)
 
             if last_data:
