@@ -83,21 +83,27 @@ def start_rtp():
         # Polling en background
         def poll_details(handle_id):
             url_details = f"{API_GATEWAY_HOST}/interact/api/city/realtimelink/v1.0/en-us/{RESOURCE_ID}/details?handleId={handle_id}"
-            MAX_ATTEMPTS = 5
-            POLL_INTERVAL = 15
-            for _ in range(MAX_ATTEMPTS):
+            MAX_ATTEMPTS = 8       # más intentos (ej: 8 * 10s = 80s)
+            POLL_INTERVAL = 10     # segundos entre intentos
+            last_data = None
+
+            for attempt in range(MAX_ATTEMPTS):
                 try:
                     details_res = requests.get(url_details, headers={"Authorization": f"Bearer {token}"})
                     if details_res.status_code == 200:
                         details_json = details_res.json()
                         if isinstance(details_json, list) and len(details_json) > 0:
-                            rtp_status[int(handle_id)]["status"] = "DONE"
-                            rtp_status[int(handle_id)]["data"] = details_json
-                            return
-                except:
-                    pass
+                            print(f"[DEBUG] Intento {attempt+1}: {len(details_json[0].get('properties', []))} propiedades recibidas")
+                            last_data = details_json
+                except Exception as e:
+                    print(f"[DEBUG] Error en intento {attempt+1}: {e}")
                 time.sleep(POLL_INTERVAL)
-            rtp_status[int(handle_id)]["status"] = "ERROR"
+
+            if last_data:
+                rtp_status[int(handle_id)]["status"] = "DONE"
+                rtp_status[int(handle_id)]["data"] = last_data
+            else:
+                rtp_status[int(handle_id)]["status"] = "ERROR"
 
         Thread(target=poll_details, args=(handle_id,), daemon=True).start()
 
