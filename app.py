@@ -83,7 +83,7 @@ def start_rtp():
         # Polling en background
         def poll_details(handle_id):
             url_details = f"{API_GATEWAY_HOST}/interact/api/city/realtimelink/v1.0/en-us/{RESOURCE_ID}/details?handleId={handle_id}"
-            MAX_ATTEMPTS = 8       # más intentos (ej: 8 * 10s = 80s)
+            MAX_ATTEMPTS = 4       # más intentos (ej: 8 * 10s = 80s)
             POLL_INTERVAL = 10     # segundos entre intentos
             last_data = None
 
