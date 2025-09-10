@@ -197,19 +197,23 @@ def ping():
 @app.route("/api/switching", methods=["GET"])
 def get_switching_data():
     luminaire_id = request.args.get("luminaireId")
-    fromdate = request.args.get("fromdate")
-    todate = request.args.get("todate")
+    fromdate = request.args.get("fromdate")  # formato esperado: YYYY-MM-DD
+    todate = request.args.get("todate")      # formato esperado: YYYY-MM-DD
 
     if not luminaire_id or not fromdate or not todate:
         return jsonify({"error": "Faltan parámetros (luminaireId, fromdate, todate)"}), 400
+
+    # Transformar fechas a ISO con hora
+    fromdate_iso = f"{fromdate}T00:00:00"
+    todate_iso = f"{todate}T00:00:00"
 
     token = get_cached_access_token()
 
     url = f"{API_GATEWAY_HOST}/interact/api/city/switchingpointlink/v1.0/en-us/{RESOURCE_ID}/luminaires"
     params = {
         "externalLuminaireIds": luminaire_id,
-        "fromdate": fromdate,
-        "todate": todate
+        "fromdate": fromdate_iso,
+        "todate": todate_iso
     }
     headers = {
         "Authorization": f"Bearer {token}"
@@ -217,7 +221,11 @@ def get_switching_data():
 
     try:
         res = requests.get(url, headers=headers, params=params, timeout=30)
-        return jsonify(res.json()), res.status_code
+        try:
+            data = res.json()
+        except ValueError:
+            return jsonify({"error": "Respuesta no es JSON", "raw": res.text[:200]}), res.status_code
+        return jsonify(data), res.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
