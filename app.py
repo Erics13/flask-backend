@@ -190,6 +190,37 @@ def control_off():
 def ping():
     return jsonify({"ok": True})
 
+
+# ----------------------
+# Endpoint SwitchingPoint
+# ----------------------
+@app.route("/api/switching", methods=["GET"])
+def get_switching_data():
+    luminaire_id = request.args.get("luminaireId")
+    fromdate = request.args.get("fromdate")
+    todate = request.args.get("todate")
+
+    if not luminaire_id or not fromdate or not todate:
+        return jsonify({"error": "Faltan parámetros (luminaireId, fromdate, todate)"}), 400
+
+    token = get_cached_access_token()
+
+    url = f"{API_GATEWAY_HOST}/interact/api/city/switchingpointlink/v1.0/en-us/{RESOURCE_ID}/luminaires"
+    params = {
+        "externalLuminaireIds": luminaire_id,
+        "fromdate": fromdate,
+        "todate": todate
+    }
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    try:
+        res = requests.get(url, headers=headers, params=params, timeout=30)
+        return jsonify(res.json()), res.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+
 # ----------------------
 # Run
 # ----------------------
