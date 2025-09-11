@@ -204,8 +204,8 @@ def get_switching_data():
         return jsonify({"error": "Faltan parámetros (luminaireId, fromdate, todate)"}), 400
 
     # Transformar fechas a ISO con hora
-    fromdate_iso = f"{fromdate}T00:00:00"
-    todate_iso = f"{todate}T00:00:00"
+    fromdate_iso = f"{fromdate}T12:00:00"
+    todate_iso = f"{todate}T12:00:00"
 
     token = get_cached_access_token()
 
